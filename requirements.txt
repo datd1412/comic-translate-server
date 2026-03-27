@@ -1,0 +1,14 @@
+fastapi==0.110.0
+uvicorn==0.29.0
+sqlalchemy==2.0.29
+passlib[bcrypt]==1.7.4
+python-jose[cryptography]==3.3.0
+pydantic==2.6.4
+requests==2.31.0
+python-multipart==0.0.9
+pydantic-settings==2.2.1
+python-dotenv==1.0.1
+httpx>=0.27.0
+psycopg2-binary==2.9.9
+# PayOS SDK currently conflicts with pinned pydantic in this project.
+# Install manually in this environment: pip install payos==1.1.0 --no-deps

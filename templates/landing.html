@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ContextRead - Dịch truyện bằng AI</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#F97316',
+            primaryHover: '#EA580C',
+            accent: '#FDBA74',
+            section: '#FFF7ED',
+            borderSoft: '#E5E7EB'
+          },
+          fontFamily: {
+            sans: ['Inter', 'sans-serif']
+          },
+          maxWidth: {
+            container: '1200px'
+          }
+        }
+      }
+    };
+  </script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+
+  <style>
+    html { scroll-behavior: smooth; }
+    body { font-family: Inter, sans-serif; background: #fff; color: #0f172a; }
+    .section-space { padding-top: 120px; padding-bottom: 120px; }
+    .card-pad { padding: 32px; }
+    .reveal { opacity: 0; transform: translateY(24px); }
+    .hero-title { font-size: clamp(2.2rem, 5.2vw, 72px); line-height: 1.05; letter-spacing: -0.02em; }
+    .section-title { font-size: clamp(2rem, 3.6vw, 40px); line-height: 1.15; letter-spacing: -0.02em; }
+    .body-text { font-size: 16px; line-height: 1.7; }
+
+    .before-after {
+      position: relative;
+      overflow: hidden;
+      border-radius: 20px;
+      border: 1px solid #E5E7EB;
+      background: #fff;
+    }
+    .before-after .after-layer {
+      position: absolute;
+      inset: 0;
+      clip-path: inset(0 100% 0 0);
+    }
+    .before-after .white-wipe {
+      position: absolute;
+      inset: 0;
+      background: #fff;
+      transform: translateX(-101%);
+      pointer-events: none;
+    }
+
+    .workflow-arrow {
+      color: #cbd5e1;
+      font-size: 22px;
+      line-height: 1;
+    }
+
+    @media (max-width: 1024px) {
+      .workflow-arrow { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <header class="sticky top-0 z-50 h-[72px] border-b border-borderSoft bg-white/95 backdrop-blur">
+    <div class="mx-auto h-full max-w-container px-6 flex items-center justify-between">
+      <a href="/" class="text-xl font-bold tracking-tight">ContextRead</a>
+      <nav class="hidden md:flex items-center gap-8 text-sm text-slate-600">
+        <a href="#features" class="hover:text-slate-900 transition">Tính năng</a>
+        <a href="#pricing" class="hover:text-slate-900 transition">Bảng giá</a>
+      </nav>
+      <div class="flex items-center gap-2">
+        <span id="profile-status" class="hidden sm:inline-flex rounded-lg border border-borderSoft px-3 py-2 text-xs font-semibold text-slate-600">Chưa đăng nhập</span>
+        <span id="payment-badge" class="hidden sm:inline-flex rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-700"></span>
+        <a id="admin-link" href="/admin/revenue" class="hidden inline-flex items-center rounded-xl border border-borderSoft px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">Admin</a>
+        <button id="profile-action" class="inline-flex items-center rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-primaryHover">Đăng nhập</button>
+        <button id="profile-logout" class="hidden inline-flex items-center rounded-xl border border-borderSoft px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">Đăng xuất</button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section class="section-space">
+      <div class="mx-auto max-w-container px-6 grid items-center gap-10 lg:grid-cols-2">
+        <div class="reveal">
+          <h1 class="hero-title font-extrabold text-slate-950">Dịch Manga, Manhwa, Manhua bằng AI hiểu ngữ cảnh</h1>
+          <p class="body-text mt-6 max-w-xl text-slate-600">OCR → Dịch → Xóa chữ → Render lại. Hoàn thành cả chapter chỉ trong vài phút.</p>
+          <div class="mt-8 flex flex-wrap gap-3">
+            <a href="/login/" class="inline-flex items-center rounded-xl bg-primary px-6 py-3 text-sm font-semibold text-white transition hover:scale-[1.03] hover:bg-primaryHover">Bắt đầu dịch</a>
+            <a href="#demo" class="inline-flex items-center rounded-xl border border-borderSoft px-6 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">Xem demo</a>
+          </div>
+        </div>
+
+        <div class="reveal">
+          <div class="overflow-hidden rounded-2xl border border-borderSoft bg-white shadow-sm">
+            <img src="/images/hero-screenshot.webp" alt="Giao diện ứng dụng ContextRead" width="1200" height="700" loading="lazy" class="h-auto w-full object-cover" />
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="demo" class="section-space bg-section">
+      <div class="mx-auto max-w-container px-6">
+        <div class="reveal mx-auto max-w-2xl text-center">
+          <h2 class="section-title font-bold text-slate-950">Xem ContextRead dịch một trang truyện</h2>
+          <p class="body-text mt-4 text-slate-600">Minh họa toàn bộ quá trình: trang gốc, trạng thái xử lý, và kết quả cuối cùng.</p>
+        </div>
+
+        <div class="mt-12 grid gap-6 lg:grid-cols-[1fr_1fr]">
+          <div class="reveal rounded-2xl border border-borderSoft bg-white p-4 shadow-sm">
+            <img src="/images/demo-original.webp" alt="Trang truyện gốc" width="900" height="1200" loading="lazy" class="w-full rounded-xl" />
+            <p class="mt-3 text-sm font-medium text-slate-500">Trang gốc</p>
+          </div>
+
+          <div class="reveal before-after p-4">
+            <img src="/images/demo-original.webp" alt="Trước khi dịch" width="900" height="1200" loading="lazy" class="w-full rounded-xl" />
+            <div class="after-layer" id="afterLayer">
+              <img src="/images/demo-translated.webp" alt="Sau khi dịch" width="900" height="1200" loading="lazy" class="w-full rounded-xl" />
+            </div>
+            <div class="white-wipe" id="whiteWipe"></div>
+            <p class="mt-3 text-sm font-medium text-slate-500">Hiệu ứng before/after</p>
+          </div>
+        </div>
+
+        <div class="mt-6 reveal rounded-2xl border border-borderSoft bg-white p-4 shadow-sm">
+          <img src="/images/demo-processing.webp" alt="Trạng thái xử lý" width="900" height="1200" loading="lazy" class="w-full rounded-xl" />
+          <p class="mt-3 text-sm font-medium text-slate-500">Trạng thái xử lý OCR / inpainting / render</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="features" class="section-space">
+      <div class="mx-auto max-w-container px-6">
+        <div class="reveal mx-auto max-w-2xl text-center">
+          <h2 class="section-title font-bold text-slate-950">Tính năng cốt lõi</h2>
+          <p class="body-text mt-4 text-slate-600">Tối ưu cho nhóm dịch cần tốc độ xử lý cao nhưng vẫn giữ chất lượng bản dịch.</p>
+        </div>
+
+        <div class="mt-12 grid gap-6 md:grid-cols-3">
+          <article class="reveal rounded-2xl border border-borderSoft bg-white card-pad shadow-sm">
+            <div class="mb-5 inline-flex h-11 w-11 items-center justify-center rounded-xl bg-orange-50 text-primary">
+              <i data-lucide="sparkles" class="h-5 w-5"></i>
+            </div>
+            <h3 class="text-[20px] font-semibold text-slate-950">Dịch theo ngữ cảnh</h3>
+            <p class="body-text mt-3 text-slate-600">AI hiểu mạch hội thoại và giữ đúng tính cách nhân vật.</p>
+          </article>
+
+          <article class="reveal rounded-2xl border border-borderSoft bg-white card-pad shadow-sm">
+            <div class="mb-5 inline-flex h-11 w-11 items-center justify-center rounded-xl bg-orange-50 text-primary">
+              <i data-lucide="layers" class="h-5 w-5"></i>
+            </div>
+            <h3 class="text-[20px] font-semibold text-slate-950">Pipeline dịch hoàn chỉnh</h3>
+            <p class="body-text mt-3 text-slate-600">OCR → dịch → xóa chữ → render trong một workflow duy nhất.</p>
+          </article>
+
+          <article class="reveal rounded-2xl border border-borderSoft bg-white card-pad shadow-sm">
+            <div class="mb-5 inline-flex h-11 w-11 items-center justify-center rounded-xl bg-orange-50 text-primary">
+              <i data-lucide="edit" class="h-5 w-5"></i>
+            </div>
+            <h3 class="text-[20px] font-semibold text-slate-950">Chỉnh sửa thủ công</h3>
+            <p class="body-text mt-3 text-slate-600">Điều chỉnh text box, font và nội dung trước khi export.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section-space bg-section">
+      <div class="mx-auto max-w-container px-6">
+        <div class="reveal mx-auto max-w-2xl text-center">
+          <h2 class="section-title font-bold text-slate-950">Từ trang truyện gốc đến bản dịch hoàn chỉnh</h2>
+        </div>
+
+        <div class="mt-12 grid gap-4 lg:grid-cols-[repeat(7,minmax(0,1fr))] items-center">
+          <div class="reveal rounded-xl border border-borderSoft bg-white p-4 text-center">
+            <i data-lucide="upload" class="mx-auto h-5 w-5 text-primary"></i>
+            <p class="mt-2 text-sm font-medium text-slate-700">Upload ảnh</p>
+          </div>
+          <div class="workflow-arrow hidden lg:block text-center">→</div>
+          <div class="reveal rounded-xl border border-borderSoft bg-white p-4 text-center">
+            <i data-lucide="scan-text" class="mx-auto h-5 w-5 text-primary"></i>
+            <p class="mt-2 text-sm font-medium text-slate-700">Detect text</p>
+          </div>
+          <div class="workflow-arrow hidden lg:block text-center">→</div>
+          <div class="reveal rounded-xl border border-borderSoft bg-white p-4 text-center">
+            <i data-lucide="file-search" class="mx-auto h-5 w-5 text-primary"></i>
+            <p class="mt-2 text-sm font-medium text-slate-700">OCR</p>
+          </div>
+          <div class="workflow-arrow hidden lg:block text-center">→</div>
+          <div class="reveal rounded-xl border border-borderSoft bg-white p-4 text-center">
+            <i data-lucide="sparkles" class="mx-auto h-5 w-5 text-primary"></i>
+            <p class="mt-2 text-sm font-medium text-slate-700">AI dịch</p>
+          </div>
+        </div>
+
+        <div class="mt-4 grid gap-4 lg:grid-cols-[repeat(7,minmax(0,1fr))] items-center">
+          <div class="reveal rounded-xl border border-borderSoft bg-white p-4 text-center lg:col-start-2">
+            <i data-lucide="eraser" class="mx-auto h-5 w-5 text-primary"></i>
+            <p class="mt-2 text-sm font-medium text-slate-700">Inpainting</p>
+          </div>
+          <div class="workflow-arrow hidden lg:block text-center">→</div>
+          <div class="reveal rounded-xl border border-borderSoft bg-white p-4 text-center">
+            <i data-lucide="type" class="mx-auto h-5 w-5 text-primary"></i>
+            <p class="mt-2 text-sm font-medium text-slate-700">Render text</p>
+          </div>
+          <div class="workflow-arrow hidden lg:block text-center">→</div>
+          <div class="reveal rounded-xl border border-borderSoft bg-white p-4 text-center">
+            <i data-lucide="download" class="mx-auto h-5 w-5 text-primary"></i>
+            <p class="mt-2 text-sm font-medium text-slate-700">Export</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section-space">
+      <div class="mx-auto max-w-container px-6">
+        <div class="reveal mx-auto max-w-2xl text-center">
+          <h2 class="section-title font-bold text-slate-950">So sánh bản gốc và bản dịch</h2>
+        </div>
+
+        <div class="mt-12 grid gap-6 md:grid-cols-2">
+          <div class="reveal rounded-2xl border border-borderSoft bg-white p-4 shadow-sm">
+            <img src="/images/panel-original-1.webp" alt="Panel gốc 1" width="900" height="1200" loading="lazy" class="w-full rounded-xl" />
+            <p class="mt-3 text-sm text-slate-500">Panel gốc #1</p>
+          </div>
+          <div class="reveal rounded-2xl border border-borderSoft bg-white p-4 shadow-sm">
+            <img src="/images/panel-translated-1.webp" alt="Panel dịch 1" width="900" height="1200" loading="lazy" class="w-full rounded-xl" />
+            <p class="mt-3 text-sm text-slate-500">Panel dịch #1</p>
+          </div>
+          <div class="reveal rounded-2xl border border-borderSoft bg-white p-4 shadow-sm">
+            <img src="/images/panel-original-2.webp" alt="Panel gốc 2" width="900" height="1200" loading="lazy" class="w-full rounded-xl" />
+            <p class="mt-3 text-sm text-slate-500">Panel gốc #2</p>
+          </div>
+          <div class="reveal rounded-2xl border border-borderSoft bg-white p-4 shadow-sm">
+            <img src="/images/panel-translated-2.webp" alt="Panel dịch 2" width="900" height="1200" loading="lazy" class="w-full rounded-xl" />
+            <p class="mt-3 text-sm text-slate-500">Panel dịch #2</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="pricing" class="section-space bg-section">
+      <div class="mx-auto max-w-container px-6">
+        <div class="reveal mx-auto max-w-2xl text-center">
+          <h2 class="section-title font-bold text-slate-950">Bảng giá</h2>
+          <p class="mt-3 text-slate-600">Mua credit theo gói một lần, cộng thẳng vào số dư và dùng dần.</p>
+        </div>
+
+        <div class="mt-12 grid gap-6 md:grid-cols-3">
+          <article class="reveal rounded-2xl border border-borderSoft bg-white card-pad shadow-sm">
+            <h3 class="text-[20px] font-semibold text-slate-950">Free</h3>
+            <ul class="mt-5 space-y-2 body-text text-slate-600">
+              <li>100 credit thử</li>
+              <li>OCR cơ bản</li>
+              <li>Support cộng đồng</li>
+            </ul>
+            <a href="/login/" class="mt-8 inline-flex rounded-xl border border-borderSoft px-5 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50">Bắt đầu</a>
+          </article>
+
+          <article class="reveal rounded-2xl border-2 border-primary bg-white card-pad shadow-sm">
+            <h3 class="text-[20px] font-semibold text-slate-950">Gói 100.000 VND</h3>
+            <ul class="mt-5 space-y-2 body-text text-slate-600">
+              <li>+1.050 one-time credit</li>
+              <li>Batch processing</li>
+              <li>Multi-model AI</li>
+              <li>Chỉnh sửa thủ công</li>
+            </ul>
+            <button data-package-code="vnd_100000" class="buy-package mt-8 inline-flex rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-white hover:bg-primaryHover">Mua gói 100.000 VND</button>
+          </article>
+
+          <article class="reveal rounded-2xl border border-borderSoft bg-white card-pad shadow-sm">
+            <h3 class="text-[20px] font-semibold text-slate-950">Gói 200.000 VND</h3>
+            <ul class="mt-5 space-y-2 body-text text-slate-600">
+              <li>+2.150 one-time credit</li>
+              <li>Workflow nhóm</li>
+              <li>Support ưu tiên</li>
+            </ul>
+            <button data-package-code="vnd_200000" class="buy-package mt-8 inline-flex rounded-xl border border-borderSoft px-5 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50">Mua gói 200.000 VND</button>
+          </article>
+        </div>
+        <p id="pricing-feedback" class="mt-4 text-center text-sm text-slate-500"></p>
+      </div>
+    </section>
+
+    <section class="section-space bg-section">
+      <div class="mx-auto max-w-container px-6">
+        <div class="reveal rounded-2xl border border-orange-100 bg-white p-10 text-center">
+          <h2 class="section-title font-bold text-slate-950">Chapter tiếp theo của bạn xứng đáng bản dịch tốt hơn</h2>
+          <a href="/login/" class="mt-8 inline-flex rounded-xl bg-primary px-8 py-3 text-base font-semibold text-white transition hover:bg-primaryHover hover:scale-[1.03]">Bắt đầu dịch ngay</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="border-t border-borderSoft bg-white">
+    <div class="mx-auto max-w-container px-6 py-10 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+      <p class="font-semibold text-slate-900">ContextRead</p>
+      <nav class="flex items-center gap-6 text-sm text-slate-600">
+        <a href="#" class="hover:text-slate-900">Docs</a>
+        <a href="#pricing" class="hover:text-slate-900">Pricing</a>
+        <a href="#" class="hover:text-slate-900">Contact</a>
+      </nav>
+    </div>
+  </footer>
+
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://unpkg.com/motion@latest/dist/motion.js"></script>
+  <script>
+    const PENDING_PACKAGE_KEY = 'ct_pending_package';
+    const CHECKOUT_LOCK_KEY = 'ct_checkout_lock';
+    const CHECKOUT_LOCK_TTL_MS = 45000;
+
+    const profileStatus = document.getElementById('profile-status');
+    const paymentBadge = document.getElementById('payment-badge');
+    const adminLink = document.getElementById('admin-link');
+    const profileAction = document.getElementById('profile-action');
+    const profileLogout = document.getElementById('profile-logout');
+    const pricingFeedback = document.getElementById('pricing-feedback');
+    const buyButtons = Array.from(document.querySelectorAll('.buy-package'));
+
+    const pageParams = new URLSearchParams(window.location.search);
+    const checkoutSource = pageParams.get('source') || '';
+    const desktopExpectedEmail = (pageParams.get('desktop_email') || '').trim().toLowerCase();
+
+    let currentUser = null;
+    let checkoutInFlight = false;
+
+    function setBuyButtonsDisabled(disabled) {
+      buyButtons.forEach((btn) => {
+        btn.disabled = disabled;
+        btn.classList.toggle('opacity-60', disabled);
+        btn.classList.toggle('cursor-not-allowed', disabled);
+      });
+    }
+
+    function readCheckoutLock() {
+      try {
+        const raw = localStorage.getItem(CHECKOUT_LOCK_KEY);
+        if (!raw) return null;
+        const lock = JSON.parse(raw);
+        if (!lock || !lock.ts || Number.isNaN(Number(lock.ts))) {
+          localStorage.removeItem(CHECKOUT_LOCK_KEY);
+          return null;
+        }
+        if (Date.now() - Number(lock.ts) > CHECKOUT_LOCK_TTL_MS) {
+          localStorage.removeItem(CHECKOUT_LOCK_KEY);
+          return null;
+        }
+        return lock;
+      } catch (_) {
+        localStorage.removeItem(CHECKOUT_LOCK_KEY);
+        return null;
+      }
+    }
+
+    function acquireCheckoutLock(packageCode) {
+      const existing = readCheckoutLock();
+      if (existing) return false;
+      const lock = {
+        ts: Date.now(),
+        packageCode: packageCode || '',
+        email: (currentUser?.email || '').toLowerCase(),
+      };
+      localStorage.setItem(CHECKOUT_LOCK_KEY, JSON.stringify(lock));
+      return true;
+    }
+
+    function releaseCheckoutLock() {
+      localStorage.removeItem(CHECKOUT_LOCK_KEY);
+      checkoutInFlight = false;
+      setBuyButtonsDisabled(false);
+    }
+
+    function syncCheckoutAvailability() {
+      if (checkoutInFlight) {
+        setBuyButtonsDisabled(true);
+        return;
+      }
+      const hasLock = Boolean(readCheckoutLock());
+      setBuyButtonsDisabled(hasLock);
+    }
+
+    function clearWebSession() {
+      // Cleanup legacy localStorage tokens from older builds.
+      localStorage.removeItem('ct_access_token');
+      localStorage.removeItem('ct_refresh_token');
+      localStorage.removeItem('ct_user_info');
+      currentUser = null;
+      profileStatus.textContent = 'Chưa đăng nhập';
+      profileAction.textContent = 'Đăng nhập';
+      adminLink.classList.add('hidden');
+      profileLogout.classList.add('hidden');
+      setPaymentBadge('', 'success');
+      setPricingFeedback('', false);
+      releaseCheckoutLock();
+    }
+
+    function setLoggedInUI(userInfo) {
+      currentUser = userInfo;
+      const email = userInfo?.email || 'Đã đăng nhập';
+      const credits = userInfo?.credits?.total ?? '-';
+      const isAdmin = Boolean(userInfo?.is_admin);
+      profileStatus.textContent = `${email} • ${credits} credit`;
+      profileAction.textContent = 'Tài khoản';
+      profileLogout.classList.remove('hidden');
+      if (isAdmin) {
+        adminLink.classList.remove('hidden');
+      } else {
+        adminLink.classList.add('hidden');
+      }
+    }
+
+    function setPaymentBadge(message, tone) {
+      if (!message) {
+        paymentBadge.classList.add('hidden');
+        paymentBadge.textContent = '';
+        paymentBadge.classList.remove('border-emerald-200', 'bg-emerald-50', 'text-emerald-700');
+        paymentBadge.classList.remove('border-amber-200', 'bg-amber-50', 'text-amber-700');
+        paymentBadge.classList.remove('border-rose-200', 'bg-rose-50', 'text-rose-700');
+        return;
+      }
+
+      paymentBadge.classList.remove('hidden');
+      paymentBadge.textContent = message;
+      paymentBadge.classList.remove('border-emerald-200', 'bg-emerald-50', 'text-emerald-700');
+      paymentBadge.classList.remove('border-amber-200', 'bg-amber-50', 'text-amber-700');
+      paymentBadge.classList.remove('border-rose-200', 'bg-rose-50', 'text-rose-700');
+
+      if (tone === 'warning') {
+        paymentBadge.classList.add('border-amber-200', 'bg-amber-50', 'text-amber-700');
+      } else if (tone === 'error') {
+        paymentBadge.classList.add('border-rose-200', 'bg-rose-50', 'text-rose-700');
+      } else {
+        paymentBadge.classList.add('border-emerald-200', 'bg-emerald-50', 'text-emerald-700');
+      }
+    }
+
+    function loginRedirect() {
+      const next = `${window.location.pathname}${window.location.search}${window.location.hash || ''}`;
+      window.location.href = `/login/?next=${encodeURIComponent(next)}`;
+    }
+
+    function isDesktopAccountMismatch() {
+      if (checkoutSource !== 'desktop' || !desktopExpectedEmail || !currentUser?.email) return false;
+      return currentUser.email.trim().toLowerCase() !== desktopExpectedEmail;
+    }
+
+    async function loadProfile() {
+      try {
+        const resp = await fetch('/auth/v1/user_info', {
+          credentials: 'same-origin'
+        });
+        if (!resp.ok) {
+          clearWebSession();
+          return false;
+        }
+
+        const userInfo = await resp.json();
+        setLoggedInUI(userInfo);
+        return true;
+      } catch (_) {
+        clearWebSession();
+        return false;
+      }
+    }
+
+    async function findTransactionByOrderCode(orderCode) {
+      if (!orderCode) return null;
+      try {
+        const resp = await fetch('/billing/v1/transactions?limit=50', {
+          credentials: 'same-origin'
+        });
+        if (!resp.ok) return null;
+        const data = await resp.json();
+        const items = Array.isArray(data?.items) ? data.items : [];
+        return items.find((item) => String(item?.provider_txn_ref || '') === String(orderCode)) || null;
+      } catch (_) {
+        return null;
+      }
+    }
+
+    async function waitForCreditSync(initialCredits, orderCode) {
+      setPaymentBadge('Đang đồng bộ credit...', 'warning');
+      setPricingFeedback('Thanh toán thành công. Đang chờ webhook xác nhận để cộng credit...', false);
+      let lastKnownCredits = typeof initialCredits === 'number' ? initialCredits : null;
+
+      for (let attempt = 1; attempt <= 12; attempt++) {
+        await new Promise((resolve) => setTimeout(resolve, 3000));
+        const ok = await loadProfile();
+        if (!ok) {
+          setPaymentBadge('Phiên đăng nhập đã hết hạn', 'error');
+          setPricingFeedback('Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại để kiểm tra credit.', true);
+          return;
+        }
+
+        const latestCredits = currentUser?.credits?.total ?? null;
+        if (typeof latestCredits === 'number') {
+          lastKnownCredits = latestCredits;
+        }
+        if (typeof initialCredits === 'number' && typeof latestCredits === 'number' && latestCredits > initialCredits) {
+          const delta = latestCredits - initialCredits;
+          setPaymentBadge(`Đã cộng +${delta} credit`, 'success');
+          setPricingFeedback(`Thanh toán hoàn tất. Bạn đã được cộng thêm ${delta} credit.`, false);
+          return;
+        }
+
+        const tx = await findTransactionByOrderCode(orderCode);
+        if (tx && tx.status === 'succeeded') {
+          if (typeof initialCredits === 'number' && typeof latestCredits === 'number' && latestCredits >= initialCredits) {
+            const delta = Math.max(0, latestCredits - initialCredits);
+            if (delta > 0) {
+              setPaymentBadge(`Đã cộng +${delta} credit`, 'success');
+              setPricingFeedback(`Thanh toán hoàn tất. Bạn đã được cộng thêm ${delta} credit.`, false);
+            } else {
+              setPaymentBadge('Thanh toán thành công', 'success');
+              setPricingFeedback('Thanh toán đã xác nhận thành công.', false);
+            }
+          } else {
+            setPaymentBadge('Thanh toán thành công', 'success');
+            setPricingFeedback('Thanh toán đã xác nhận thành công.', false);
+          }
+          return;
+        }
+      }
+
+      if (typeof initialCredits === 'number' && typeof lastKnownCredits === 'number' && lastKnownCredits >= initialCredits) {
+        setPaymentBadge('Thanh toán đã xử lý thành công', 'success');
+        setPricingFeedback('Thanh toán đã xác nhận. Credit đã ở trạng thái mới nhất.', false);
+        return;
+      }
+
+      setPaymentBadge('Thanh toán đã nhận, credit đang chờ đồng bộ', 'warning');
+      setPricingFeedback('Thanh toán thành công nhưng credit chưa cập nhật ngay. Vui lòng chờ thêm và tải lại trang.', false);
+    }
+
+    function setPricingFeedback(message, isError) {
+      pricingFeedback.textContent = message || '';
+      pricingFeedback.classList.toggle('text-rose-600', Boolean(isError));
+      pricingFeedback.classList.toggle('text-slate-500', !isError);
+    }
+
+    async function startCheckout(packageCode, fromPending) {
+      if (checkoutInFlight) {
+        setPricingFeedback('Yêu cầu thanh toán đang được xử lý, vui lòng chờ...', false);
+        return;
+      }
+
+      if (isDesktopAccountMismatch()) {
+        setPricingFeedback(`Tài khoản web hiện tại (${currentUser?.email || 'unknown'}) khác tài khoản trên app desktop (${desktopExpectedEmail}). Vui lòng đăng xuất web và đăng nhập đúng tài khoản.`, true);
+        return;
+      }
+
+      if (!acquireCheckoutLock(packageCode)) {
+        setPricingFeedback('Một tab khác đang mở thanh toán. Vui lòng hoàn tất hoặc chờ khoảng 45 giây.', true);
+        setBuyButtonsDisabled(true);
+        return;
+      }
+
+      checkoutInFlight = true;
+      setBuyButtonsDisabled(true);
+      setPricingFeedback('Đang tạo link thanh toán...', false);
+
+      try {
+        const resp = await fetch('/billing/v1/payment-intents', {
+          method: 'POST',
+          credentials: 'same-origin',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            package_code: packageCode,
+            idempotency_key: `web-${packageCode}-${Date.now()}`
+          })
+        });
+
+        if (resp.status === 401) {
+          clearWebSession();
+          localStorage.setItem(PENDING_PACKAGE_KEY, packageCode);
+          releaseCheckoutLock();
+          loginRedirect();
+          return;
+        }
+
+        const data = await resp.json();
+        if (!resp.ok) {
+          throw new Error(data.detail || data.error || 'Không thể tạo thanh toán');
+        }
+
+        // Consume pending checkout marker once we successfully created an intent,
+        // otherwise cancel/return flows can keep reopening PayOS on every visit.
+        localStorage.removeItem(PENDING_PACKAGE_KEY);
+        window.location.href = data.checkout_url;
+      } catch (err) {
+        setPricingFeedback(err.message || 'Không thể tạo thanh toán. Vui lòng thử lại.', true);
+        releaseCheckoutLock();
+      }
+    }
+
+    async function signoutWeb() {
+      try {
+        await fetch('/auth/v1/signout?scope=web', {
+          method: 'POST',
+          credentials: 'same-origin'
+        });
+      } catch (_) {
+        // Best-effort signout.
+      }
+      clearWebSession();
+      localStorage.removeItem(PENDING_PACKAGE_KEY);
+      releaseCheckoutLock();
+      window.history.replaceState({}, document.title, `${window.location.pathname}${window.location.hash || ''}`);
+    }
+
+    profileAction.addEventListener('click', () => {
+      if (!currentUser) {
+        loginRedirect();
+        return;
+      }
+      window.location.href = '#pricing';
+    });
+
+    profileLogout.addEventListener('click', signoutWeb);
+
+    document.querySelectorAll('.buy-package').forEach((button) => {
+      button.addEventListener('click', () => startCheckout(button.dataset.packageCode, false));
+    });
+
+    lucide.createIcons();
+
+    (async () => {
+      const params = new URLSearchParams(window.location.search);
+      const paymentResult = params.get('payment');
+      const orderCode = params.get('orderCode');
+      const loggedIn = await loadProfile();
+
+      if (paymentResult === 'success' && loggedIn) {
+        const initialCredits = currentUser?.credits?.total;
+        await waitForCreditSync(typeof initialCredits === 'number' ? initialCredits : null, orderCode);
+        releaseCheckoutLock();
+        window.history.replaceState({}, document.title, `${window.location.pathname}${window.location.hash || ''}`);
+      } else if (paymentResult === 'cancelled') {
+        setPaymentBadge('Bạn đã hủy thanh toán', 'warning');
+        setPricingFeedback('Bạn đã hủy thanh toán. Có thể thử lại bất cứ lúc nào.', false);
+        localStorage.removeItem(PENDING_PACKAGE_KEY);
+        releaseCheckoutLock();
+        window.history.replaceState({}, document.title, `${window.location.pathname}${window.location.hash || ''}`);
+      } else {
+        setPaymentBadge('', 'success');
+        setPricingFeedback('', false);
+        // Keep cross-tab lock intact on normal load; readCheckoutLock handles TTL cleanup.
+        syncCheckoutAvailability();
+      }
+
+      const pendingPackage = localStorage.getItem(PENDING_PACKAGE_KEY);
+      if (loggedIn && pendingPackage) {
+        await startCheckout(pendingPackage, true);
+      } else {
+        syncCheckoutAvailability();
+      }
+    })();
+
+    window.addEventListener('storage', (event) => {
+      if (event.key === CHECKOUT_LOCK_KEY) {
+        syncCheckoutAvailability();
+      }
+      if (event.key === PENDING_PACKAGE_KEY && !event.newValue) {
+        // Another tab consumed/cleared pending checkout state.
+        if (!checkoutInFlight) {
+          setPricingFeedback('', false);
+        }
+      }
+    });
+
+    setInterval(syncCheckoutAvailability, 1500);
+
+    if (window.Motion && window.Motion.animate && window.Motion.inView) {
+      const { animate, inView, stagger } = window.Motion;
+
+      inView('.reveal', (el) => {
+        animate(el, { opacity: [0, 1], transform: ['translateY(24px)', 'translateY(0px)'] }, { duration: 0.6, easing: 'ease-out' });
+      }, { margin: '-10% 0px -10% 0px' });
+
+      const workflowCards = document.querySelectorAll('.workflow-steps .reveal');
+      if (workflowCards.length) {
+        animate(workflowCards, { opacity: [0, 1], transform: ['translateY(16px)', 'translateY(0px)'] }, { delay: stagger(0.08), duration: 0.45 });
+      }
+
+      const afterLayer = document.getElementById('afterLayer');
+      const whiteWipe = document.getElementById('whiteWipe');
+      let played = false;
+
+      inView('#demo', () => {
+        if (played) return;
+        played = true;
+        animate(whiteWipe, { transform: ['translateX(-101%)', 'translateX(0%)', 'translateX(101%)'] }, { duration: 0.8, easing: 'ease-in-out' });
+        animate(afterLayer, { clipPath: ['inset(0 100% 0 0)', 'inset(0 0% 0 0)'] }, { duration: 0.8, easing: 'ease-in-out' });
+      });
+    } else {
+      document.querySelectorAll('.reveal').forEach((el) => {
+        el.style.opacity = '1';
+        el.style.transform = 'translateY(0)';
+      });
+      const afterLayer = document.getElementById('afterLayer');
+      if (afterLayer) afterLayer.style.clipPath = 'inset(0 0% 0 0)';
+    }
+  </script>
+</body>
+</html>

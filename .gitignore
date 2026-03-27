@@ -1,0 +1,26 @@
+# Secrets and local environment
+.env
+.env.*.local
+
+# Local databases
+*.db
+*.sqlite
+
+# Python caches and bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Tooling/editor state
+.vscode/
+.idea/
+*.code-workspace
+
+# OS clutter
+.DS_Store
+Thumbs.db

@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Signing In...</title>
+    <style>
+        body { font-family: sans-serif; display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100vh; margin: 0; background-color: #f9fafb; }
+        .success-icon { color: #10b981; font-size: 4rem; margin-bottom: 1rem; }
+        h2 { margin-top: 0; color: #111827; }
+        p { color: #6b7280; }
+    </style>
+</head>
+<body>
+    <div class="success-icon">✓</div>
+    <h2>Sign In Successful</h2>
+    <p>Returning you to the application...</p>
+
+    <script>
+        // the desktop app expects a JSON payload
+        const payload = {
+            request_id: "{{ request_id }}",
+            access_token: "{{ access_token }}",
+            refresh_token: "{{ refresh_token }}",
+            user_info: {
+                email: "{{ email }}",
+                tier: "{{ tier }}",
+                credits: {
+                    subscription: {{ credits_sub }},
+                    one_time: {{ credits_one }},
+                    total: {{ credits_total }}
+                },
+                monthly_credits: {{ monthly_credits|default(0) }}
+            }
+        };
+
+        window.onload = function() {
+            setTimeout(function() {
+                // By removing Content-Type and adding mode: 'no-cors', the browser won't
+                // do an OPTIONS preflight request that gets blocked by the desktop server.
+                fetch("{{ desktop_callback_uri|safe }}", {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    body: JSON.stringify(payload)
+                }).then(() => {
+                    document.body.innerHTML += "<p style='color:#10b981; margin-top:1rem;'>Thành công! Bạn có thể đóng tab này.</p>";
+                }).catch((err) => {
+                    document.body.innerHTML += "<p style='color:red;'>Lỗi gửi token về app. Vui lòng thử lại.</p>";
+                    console.error('Error posting to desktop app:', err);
+                });
+            }, 500);
+        };
+    </script>
+</body>
+</html>

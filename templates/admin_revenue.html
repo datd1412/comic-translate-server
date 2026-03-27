@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ContextRead - Admin doanh thu</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#F97316',
+            primaryHover: '#EA580C',
+            section: '#FFF7ED',
+            borderSoft: '#E5E7EB'
+          },
+          fontFamily: {
+            sans: ['Inter', 'sans-serif']
+          },
+          maxWidth: {
+            container: '1200px'
+          }
+        }
+      }
+    };
+  </script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+</head>
+<body class="font-sans bg-white text-slate-900">
+  <header class="sticky top-0 z-50 h-[72px] border-b border-borderSoft bg-white/95 backdrop-blur">
+    <div class="mx-auto h-full max-w-container px-6 flex items-center justify-between">
+      <a href="/" class="text-xl font-bold tracking-tight">ContextRead</a>
+      <div class="flex items-center gap-2">
+        <span id="admin-status" class="hidden sm:inline-flex rounded-lg border border-borderSoft px-3 py-2 text-xs font-semibold text-slate-600">Đang kiểm tra phiên...</span>
+        <a href="/" class="inline-flex items-center rounded-xl border border-borderSoft px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50">Trang chủ</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="px-6 py-10">
+    <section class="mx-auto max-w-container">
+      <div class="flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <h1 class="text-3xl font-extrabold tracking-tight">Admin doanh thu</h1>
+          <p class="mt-2 text-slate-600">Theo dõi doanh thu theo tài khoản, ngày và tháng.</p>
+        </div>
+      </div>
+
+      <div class="mt-6 rounded-2xl border border-borderSoft bg-section p-4">
+        <form id="filter-form" class="grid gap-3 md:grid-cols-5">
+          <label class="text-sm font-medium text-slate-700">Từ ngày
+            <input id="start-date" type="date" class="mt-1 w-full rounded-xl border border-borderSoft bg-white px-3 py-2 text-sm" />
+          </label>
+          <label class="text-sm font-medium text-slate-700">Đến ngày
+            <input id="end-date" type="date" class="mt-1 w-full rounded-xl border border-borderSoft bg-white px-3 py-2 text-sm" />
+          </label>
+          <label class="text-sm font-medium text-slate-700">Nhóm theo
+            <select id="group-by" class="mt-1 w-full rounded-xl border border-borderSoft bg-white px-3 py-2 text-sm">
+              <option value="day">Ngày</option>
+              <option value="month">Tháng</option>
+            </select>
+          </label>
+          <button class="rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-white hover:bg-primaryHover" type="submit">Lọc dữ liệu</button>
+          <button id="export-csv" class="rounded-xl border border-borderSoft bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50" type="button">Export CSV</button>
+        </form>
+        <p id="error-box" class="mt-3 hidden rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700"></p>
+      </div>
+
+      <section class="mt-6 grid gap-4 md:grid-cols-3">
+        <article class="rounded-2xl border border-borderSoft bg-white p-5 shadow-sm">
+          <p class="text-sm text-slate-500">Tổng doanh thu</p>
+          <p id="summary-revenue" class="mt-2 text-2xl font-bold">-</p>
+        </article>
+        <article class="rounded-2xl border border-borderSoft bg-white p-5 shadow-sm">
+          <p class="text-sm text-slate-500">Giao dịch thành công</p>
+          <p id="summary-transactions" class="mt-2 text-2xl font-bold">-</p>
+        </article>
+        <article class="rounded-2xl border border-borderSoft bg-white p-5 shadow-sm">
+          <p class="text-sm text-slate-500">Credit đã bán</p>
+          <p id="summary-credits" class="mt-2 text-2xl font-bold">-</p>
+        </article>
+      </section>
+
+      <section class="mt-8 grid gap-6 lg:grid-cols-2">
+        <article class="rounded-2xl border border-borderSoft bg-white p-5 shadow-sm">
+          <h2 class="text-lg font-bold">Thống kê theo thời gian</h2>
+          <div class="mt-4 overflow-x-auto">
+            <table class="min-w-full text-sm">
+              <thead class="border-b border-borderSoft text-left text-slate-500">
+                <tr>
+                  <th class="px-2 py-2">Kỳ</th>
+                  <th class="px-2 py-2">Doanh thu</th>
+                  <th class="px-2 py-2">Giao dịch</th>
+                  <th class="px-2 py-2">Credit</th>
+                </tr>
+              </thead>
+              <tbody id="time-series-body" class="divide-y divide-borderSoft"></tbody>
+            </table>
+          </div>
+        </article>
+
+        <article class="rounded-2xl border border-borderSoft bg-white p-5 shadow-sm">
+          <h2 class="text-lg font-bold">Doanh thu theo tài khoản</h2>
+          <div class="mt-4 overflow-x-auto">
+            <table class="min-w-full text-sm">
+              <thead class="border-b border-borderSoft text-left text-slate-500">
+                <tr>
+                  <th class="px-2 py-2">Email</th>
+                  <th class="px-2 py-2">Doanh thu</th>
+                  <th class="px-2 py-2">Giao dịch</th>
+                  <th class="px-2 py-2">Credit</th>
+                </tr>
+              </thead>
+              <tbody id="accounts-body" class="divide-y divide-borderSoft"></tbody>
+            </table>
+          </div>
+        </article>
+      </section>
+
+      <section class="mt-8 rounded-2xl border border-borderSoft bg-white p-5 shadow-sm">
+        <h2 class="text-lg font-bold">Giao dịch gần nhất</h2>
+        <div class="mt-4 overflow-x-auto">
+          <table class="min-w-full text-sm">
+            <thead class="border-b border-borderSoft text-left text-slate-500">
+              <tr>
+                <th class="px-2 py-2">Thời gian</th>
+                <th class="px-2 py-2">Email</th>
+                <th class="px-2 py-2">Số tiền</th>
+                <th class="px-2 py-2">Credit</th>
+                <th class="px-2 py-2">Provider</th>
+              </tr>
+            </thead>
+            <tbody id="recent-body" class="divide-y divide-borderSoft"></tbody>
+          </table>
+        </div>
+      </section>
+    </section>
+  </main>
+
+  <script>
+    const adminStatus = document.getElementById('admin-status');
+    const errorBox = document.getElementById('error-box');
+    const exportBtn = document.getElementById('export-csv');
+
+    function vnd(value) {
+      const n = Number(value || 0);
+      return `${n.toLocaleString('vi-VN')} VND`;
+    }
+
+    function formatUtcToVn(value) {
+      if (!value) return '-';
+      const raw = String(value);
+      const hasOffset = /(?:Z|[+-]\d{2}:\d{2})$/i.test(raw);
+      const normalized = hasOffset ? raw : `${raw}Z`;
+      const dt = new Date(normalized);
+      if (Number.isNaN(dt.getTime())) return raw;
+      return dt.toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' });
+    }
+
+    function showError(message) {
+      errorBox.textContent = message;
+      errorBox.classList.remove('hidden');
+    }
+
+    function clearError() {
+      errorBox.textContent = '';
+      errorBox.classList.add('hidden');
+    }
+
+    function getFilterParams() {
+      const params = new URLSearchParams();
+      const startDate = document.getElementById('start-date').value;
+      const endDate = document.getElementById('end-date').value;
+      const groupBy = document.getElementById('group-by').value;
+
+      if (startDate) params.set('start_date', startDate);
+      if (endDate) params.set('end_date', endDate);
+      params.set('group_by', groupBy);
+      return params;
+    }
+
+    function fillTableRows(targetId, rows, renderRow) {
+      const tbody = document.getElementById(targetId);
+      tbody.innerHTML = '';
+      if (!rows.length) {
+        tbody.innerHTML = '<tr><td colspan="5" class="px-2 py-3 text-slate-500">Không có dữ liệu</td></tr>';
+        return;
+      }
+      tbody.innerHTML = rows.map(renderRow).join('');
+    }
+
+    async function loadRevenue() {
+      clearError();
+      adminStatus.textContent = 'Đang tải dữ liệu...';
+
+      const params = getFilterParams();
+
+      try {
+        const resp = await fetch(`/billing/v1/admin/revenue?${params.toString()}`, {
+          credentials: 'same-origin'
+        });
+
+        const data = await resp.json();
+        if (!resp.ok) {
+          throw new Error(data.detail || 'Không thể tải dữ liệu doanh thu');
+        }
+
+        adminStatus.textContent = 'Đã xác thực admin';
+
+        document.getElementById('summary-revenue').textContent = vnd(data.summary.total_revenue_vnd);
+        document.getElementById('summary-transactions').textContent = Number(data.summary.total_transactions || 0).toLocaleString('vi-VN');
+        document.getElementById('summary-credits').textContent = Number(data.summary.total_credits || 0).toLocaleString('vi-VN');
+
+        fillTableRows('time-series-body', data.time_series || [], (item) => `
+          <tr>
+            <td class="px-2 py-2">${item.period}</td>
+            <td class="px-2 py-2">${vnd(item.revenue_vnd)}</td>
+            <td class="px-2 py-2">${Number(item.transactions || 0).toLocaleString('vi-VN')}</td>
+            <td class="px-2 py-2">${Number(item.credits || 0).toLocaleString('vi-VN')}</td>
+          </tr>
+        `);
+
+        fillTableRows('accounts-body', data.accounts || [], (item) => `
+          <tr>
+            <td class="px-2 py-2">${item.email}</td>
+            <td class="px-2 py-2">${vnd(item.revenue_vnd)}</td>
+            <td class="px-2 py-2">${Number(item.transactions || 0).toLocaleString('vi-VN')}</td>
+            <td class="px-2 py-2">${Number(item.credits || 0).toLocaleString('vi-VN')}</td>
+          </tr>
+        `);
+
+        fillTableRows('recent-body', data.recent_transactions || [], (item) => `
+          <tr>
+            <td class="px-2 py-2">${formatUtcToVn(item.paid_at)}</td>
+            <td class="px-2 py-2">${item.email}</td>
+            <td class="px-2 py-2">${vnd(item.amount_vnd)}</td>
+            <td class="px-2 py-2">${Number(item.credits || 0).toLocaleString('vi-VN')}</td>
+            <td class="px-2 py-2">${item.provider}</td>
+          </tr>
+        `);
+      } catch (err) {
+        adminStatus.textContent = 'Lỗi xác thực/tải dữ liệu';
+        showError(err.message || 'Không thể tải dữ liệu doanh thu');
+      }
+    }
+
+    document.getElementById('filter-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      await loadRevenue();
+    });
+
+    exportBtn.addEventListener('click', async () => {
+      clearError();
+      exportBtn.disabled = true;
+      exportBtn.textContent = 'Đang export...';
+
+      try {
+        const params = getFilterParams();
+        const resp = await fetch(`/billing/v1/admin/revenue/export.csv?${params.toString()}`, {
+          credentials: 'same-origin'
+        });
+
+        if (!resp.ok) {
+          let msg = 'Không thể export CSV';
+          try {
+            const data = await resp.json();
+            msg = data.detail || msg;
+          } catch (_) {
+            // Ignore JSON parse errors for non-JSON responses.
+          }
+          throw new Error(msg);
+        }
+
+        const blob = await resp.blob();
+        const contentDisposition = resp.headers.get('Content-Disposition') || '';
+        const match = contentDisposition.match(/filename="([^"]+)"/i);
+        const filename = match ? match[1] : 'revenue_export.csv';
+
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+      } catch (err) {
+        showError(err.message || 'Không thể export CSV');
+      } finally {
+        exportBtn.disabled = false;
+        exportBtn.textContent = 'Export CSV';
+      }
+    });
+
+    loadRevenue();
+  </script>
+</body>
+</html>

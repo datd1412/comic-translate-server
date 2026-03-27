@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ContextRead - Đã hủy thanh toán</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#F97316',
+            primaryHover: '#EA580C',
+            borderSoft: '#E5E7EB'
+          },
+          fontFamily: {
+            sans: ['Inter', 'sans-serif']
+          },
+          maxWidth: {
+            container: '1200px'
+          }
+        }
+      }
+    };
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+</head>
+<body class="min-h-screen bg-[radial-gradient(circle_at_top_left,_#fff7ed,_#ffffff_45%)] font-sans text-slate-900">
+  <header class="sticky top-0 z-50 h-[72px] border-b border-borderSoft bg-white/95 backdrop-blur">
+    <div class="mx-auto h-full max-w-container px-6 flex items-center justify-between">
+      <a href="/" class="text-xl font-bold tracking-tight">ContextRead</a>
+      <a href="/" class="inline-flex items-center rounded-xl border border-borderSoft px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50">Về trang chủ</a>
+    </div>
+  </header>
+
+  <main class="px-6 py-16">
+    <section class="mx-auto max-w-2xl rounded-3xl border border-borderSoft bg-white p-8 shadow-sm md:p-10">
+      <div class="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-amber-100 text-amber-700">
+        <svg viewBox="0 0 24 24" class="h-8 w-8" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 9v4" />
+          <circle cx="12" cy="17" r="1" />
+          <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+        </svg>
+      </div>
+
+      <h1 class="text-center text-3xl font-extrabold tracking-tight">Bạn đã hủy thanh toán</h1>
+      <p class="mt-3 text-center text-slate-600">{{ message }}</p>
+
+      <div class="mt-8 rounded-2xl border border-borderSoft bg-slate-50 p-4 text-sm text-slate-700">
+        <p><span class="font-semibold">Mã đơn hàng:</span> {{ order_code or 'N/A' }}</p>
+        <p class="mt-2">Credit chưa bị trừ và chưa có thay đổi số dư.</p>
+      </div>
+
+      <div class="mt-8 flex flex-wrap items-center justify-center gap-3">
+        <a href="/?payment=cancelled#pricing" class="inline-flex items-center rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-white hover:bg-primaryHover">Thử thanh toán lại</a>
+        <a href="/?payment=cancelled" class="inline-flex items-center rounded-xl border border-borderSoft px-5 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50">Về trang chủ</a>
+      </div>
+    </section>
+  </main>
+</body>
+</html>

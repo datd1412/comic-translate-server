@@ -10,5 +10,6 @@ pydantic-settings==2.2.1
 python-dotenv==1.0.1
 httpx>=0.27.0
 psycopg2-binary==2.9.9
+jinja2==3.1.3
 # PayOS SDK currently conflicts with pinned pydantic in this project.
 # Install manually in this environment: pip install payos==1.1.0 --no-deps
